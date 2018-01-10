@@ -1,0 +1,23 @@
+<!doctype html>
+
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+
+  <title>calendar demo</title>
+
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+  <link rel="import" href="../custom-calendar.html">
+</head>
+<body>
+
+	 <custom-calendar class="flex horizontal-margin-right" required label="Check-in" name="checkIn" id="checkIn" selected-date="02/25/2018"
+                always-float-label error-message="Check In date missing." format="mm/dd/yyyy"
+                on-date-picker-open="_closeCheckoutDatePicker">
+    </custom-calendar>
+</body>
+</html>

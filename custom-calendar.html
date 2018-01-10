@@ -1,0 +1,747 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html" />
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="../../bower_components/iron-input/iron-input.html" />
+<link rel="import" href="../../bower_components/paper-material/paper-material.html" />
+<link rel="import" href="calendar-dependency.html" />
+<link rel="import" href="../../bower_components/iron-form-element-behavior/iron-form-element-behavior.html" />
+<link rel="import" href="../../bower_components/paper-input/paper-input-behavior.html" />
+<link rel="import" href="../../bower_components/paper-input/paper-input-error.html" />
+<link rel="import" href="../../bower_components/paper-input/paper-input-container.html" />
+<link rel="import" href="../../bower_components/paper-input/paper-input.html" />
+
+<dom-module id="custom-calendar">
+<template>
+        <style>
+            :host{
+              display: block;
+            }
+
+            :host *,*{
+              box-sizing: border-box;
+              -moz-box-sizing: border-box;
+            }
+
+            .picker__input {
+              cursor: default;
+            }
+
+            /**
+             * The holder is the only “scrollable” top-level container element.
+             */
+            /* line 48, D:\filter\less\date-time\base.less */
+            .picker__holder {
+              width: 100%;
+              overflow-y: auto;
+              -webkit-overflow-scrolling: touch;
+              top: 0;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              z-index: 1; 
+              -webkit-transform: translateY(100%);
+                  -ms-transform: translateY(100%);
+                      transform: translateY(100%);
+                      outline: 0;
+            }
+            /* line 27, D:\filter\less\date-time\default.less */
+            .picker__frame {
+              top: 50%;
+              -webkit-transform: translateY(-50%);
+                  -ms-transform: translateY(-50%);
+                      transform: translateY(-50%);
+              left: 0;
+              right: 0;
+            }
+            /**
+             * The holder should overlay the entire screen.
+             */
+            /* line 42, D:\filter\less\date-time\default.less */
+            .picker__holder {
+              position: fixed;
+              -webkit-transition: background 0.15s ease-out, -webkit-transform 0s 0.15s;
+                      transition: background 0.15s ease-out, transform 0s 0.15s;
+              -webkit-backface-visibility: hidden;
+            }
+            /**
+             * The frame that bounds the box contents of the picker.
+             */
+            /* line 59, D:\filter\less\date-time\default.less */
+            .picker__frame {
+              position: absolute;
+              margin: 0 auto;
+              min-width: 290px;
+              max-width: 350px;
+              width: 100%;
+              -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+              filter: alpha(opacity=0);
+              -moz-opacity: 0;
+              opacity: 0;
+              -webkit-transition: all 0.15s ease-out;
+                      transition: all 0.15s ease-out;
+            }
+            /**
+             * The wrapper sets the stage to vertically align the box contents.
+             */
+            /* line 100, D:\filter\less\date-time\default.less */
+            .picker__wrap {
+              display: table;
+              width: 100%;
+              height: 100%;
+              /* @media ( min-height: @breakpoint-small ) {
+                    display: block;
+                } */
+            }
+            /**
+             * The box contains all the picker contents.
+             */
+            /* line 116, D:\filter\less\date-time\default.less */
+            .picker__box {
+              background: var(--calendar-box-background-color);
+              display: table-cell;
+              vertical-align: middle;
+            }
+            @media (min-height: 0em) {
+              /* line 127, D:\filter\less\date-time\default.less */
+              .picker__box {
+                display: block;
+                border: 1px solid #777777;
+                border-top-color: #898989;
+                border-bottom-width: 0;
+                border-radius: 2px 2px 0 0;
+                box-shadow: 0 6px 36px 16px rgba(0, 0, 0, 0.2);
+              }
+            }
+            @media (min-height: 40.125em) {
+              /* line 146, D:\filter\less\date-time\default.less */
+              .picker__box {
+                border-bottom-width: 1px;
+                border-radius: var(--standard-border-radius);
+              }
+            }
+            /**
+             * When the picker opens...
+             */
+            /* line 162, D:\filter\less\date-time\default.less */
+            .picker--opened .picker__holder {
+              -webkit-transform: translateY(0);
+                  -ms-transform: translateY(0);
+                      transform: translateY(0);
+              background: transparent;
+              -ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorstr=#1E000000,endColorstr=#1E000000)";
+              zoom: 1;
+              background: rgba(0, 0, 0, 0.32);
+              -webkit-transition: background 0.15s ease-out;
+                      transition: background 0.15s ease-out;
+            }
+            /* line 179, D:\filter\less\date-time\default.less */
+            .picker--opened .picker__frame {
+              -webkit-transform: translateY(-50%);
+                  -ms-transform: translateY(-50%);
+                      transform: translateY(-50%);
+              -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+              filter: alpha(opacity=100);
+              -moz-opacity: 1;
+              opacity: 1;
+              display: block;
+  
+              /* @media ( min-height: @breakpoint-small ) {
+                        top: auto;
+                        bottom: 0;
+                    } */
+            }
+            /* line 12, D:\filter\less\date-time\base.date.less */
+            .picker__box {
+              padding: 0 0.6em;
+              height: 100%;
+              min-width: 100%;
+              max-width: 280px;
+              position: relative;
+              margin: 0 auto;
+            }
+            /**
+             * The header containing the month and year stuff.
+             */
+            /* line 25, D:\filter\less\date-time\base.date.less */
+            .picker__header {
+              text-align: center;
+              position: relative;
+              margin-top: .75em;
+              font-size: 14px;
+            }
+            /**
+             * The month and year labels.
+             */
+            /* line 36, D:\filter\less\date-time\base.date.less */
+            .picker__month,
+            .picker__year {
+              font-weight: bold;
+              display: inline-block;
+              margin-left: .25em;
+              margin-right: .25em;
+              height: 20px;
+              vertical-align: sub;
+            }
+            /**
+             * The month and year selectors.
+             */
+            /* line 54, D:\filter\less\date-time\base.date.less */
+            .picker__select--month,
+            .picker__select--year {
+              border: 1px solid #b7b7b7;
+              height: 2em;
+              padding: .2em;
+              margin-left: .25em;
+              margin-right: .25em;
+              color: rgba(0, 0, 0, 0.87);
+              /*  @media ( min-width: @breakpoint-width-tiny ) {
+                   margin-top: -.5em;
+               } */
+            }
+            /* line 67, D:\filter\less\date-time\base.date.less */
+            .picker__select--month {
+              width: 35%;
+            }
+            /* line 70, D:\filter\less\date-time\base.date.less */
+            .picker__select--year {
+              width: 22.5%;
+            }
+            /* line 67, D:\filter\less\date-time\base.date.less */
+            :host([is-dob]) ::content .picker__select--month {
+              width: 40%;
+            }
+            /* line 70, D:\filter\less\date-time\base.date.less */
+            :host([is-dob]) ::content .picker__select--year {
+              width: 25%;
+            }
+            /* line 73, D:\filter\less\date-time\base.date.less */
+            .picker__select--month:focus,
+            .picker__select--year:focus {
+              border-color: var(--default-primary-color);
+            }
+
+            .picker__select--month > option[disabled] {
+              display: none;
+            }
+
+            /* line 79, D:\filter\less\date-time\base.date.less */
+            .picker__nav--prev {
+              left: 0;
+              /*   @media ( min-width: @breakpoint-width-tiny ) {
+                  padding-right: 1.5em;
+              } */
+            }
+            /* line 87, D:\filter\less\date-time\base.date.less */
+            .picker__nav--next {
+              right: 0;
+              /* @media ( min-width: @breakpoint-width-tiny ) {
+                    padding-left: 1.5em;
+                } */
+            }
+            /**
+             * The month navigation buttons.
+             */
+            /* line 98, D:\filter\less\date-time\base.date.less */
+            .picker__nav--prev,
+            .picker__nav--next {
+              position: absolute;
+              padding: .5em;
+              width: 1em;
+              height: 1em;
+              box-sizing: content-box;
+              top: -2px;
+              border-radius: 50%;
+              /* @media ( min-width: @breakpoint-width-tiny ) {
+                    top: -.33em;
+                } */
+            }
+            /* line 113, D:\filter\less\date-time\base.date.less */
+            .picker__nav--prev:before,
+            .picker__nav--next:before {
+              content: " ";
+              border-top: .4em solid transparent;
+              border-bottom: .4em solid transparent;
+              width: 0;
+              height: 0;
+              display: block;
+              margin: 0 auto;
+              position: relative;
+              top: 2px;
+              right: 1px;
+            }
+            .picker__nav--prev:before{
+              border-right: 0.6em solid var(--calendar-box-prev-next-color);
+
+            }
+            /* line 127, D:\filter\less\date-time\base.date.less */
+            .picker__nav--next:before {
+              border-right: 0;
+              border-left: 0.6em solid var(--calendar-box-prev-next-color);
+              right: 0;
+              left: 1px;
+            }
+            /* line 135, D:\filter\less\date-time\base.date.less */
+            .picker__nav--prev:hover,
+            .picker__nav--next:hover {
+              cursor: pointer;
+              background: var(--calendar-box-prev-next-hover-bg);
+            }
+            /* line 140, D:\filter\less\date-time\base.date.less */
+            .picker__nav--prev:hover:before {
+              border-right-color: var(--calendar-box-prev-next-hover-color);
+            }
+            /* line 143, D:\filter\less\date-time\base.date.less */
+            .picker__nav--next:hover:before {
+              border-left-color: var(--calendar-box-prev-next-hover-color);
+            }
+            /* line 147, D:\filter\less\date-time\base.date.less */
+            .picker__nav--disabled,
+            .picker__nav--disabled:hover,
+            .picker__nav--disabled:before,
+            .picker__nav--disabled:before:hover {
+              cursor: default;
+              background: none !important;
+              border-right-color: #f5f5f5!important;
+              border-left-color: #f5f5f5!important;
+            }
+            /**
+             * The calendar table of dates
+             */
+            /* line 163, D:\filter\less\date-time\base.date.less */
+            .picker__table {
+              text-align: center;
+              border-collapse: collapse;
+              border-spacing: 0;
+              table-layout: fixed;
+              font-size: 13px;
+              width: 100%;
+              margin-top: .75em;
+              margin-bottom: .5em;
+            }
+
+            .picker__weekday {
+             width: 14.285714286%;
+             font-size: var(--calendar-weekday-text-size);
+             padding-bottom: .5em;
+             color: var(--calendar-weekday-text-color);
+             font-weight: 100;
+             /* Increase the spacing a tad */
+            }
+            @media (min-height: 33.875em) {
+              /* line 174, D:\filter\less\date-time\base.date.less */
+              .picker__table {
+                margin-bottom: .75em;
+              }
+            }
+            /* line 180, D:\filter\less\date-time\base.date.less */
+            .picker__table td {
+              margin: 0;
+              padding: 0;
+              color: #111111;
+            }
+            /
+            @media (min-height: 33.875em) {
+              /* line 198, D:\filter\less\date-time\base.date.less */
+              .picker__weekday {
+                padding-bottom: .75em;
+              }
+            }
+            /**
+             * The days on the calendar
+             */
+            /* line 207, D:\filter\less\date-time\base.date.less */
+            .picker__day {
+              padding: .55em;
+              font-weight: 500;
+              border: 1px solid transparent;
+              width: 2.5em;
+              height: 2.5em;
+              margin: 3px auto;
+              border-radius: 50%;
+              color: var(--calendar-day-text-color);
+            }
+            /* line 236, D:\filter\less\date-time\base.date.less */
+            .picker__day--disabled:before {
+              border-top-color: #aaaaaa;
+            }
+            /* line 241, D:\filter\less\date-time\base.date.less */
+            .picker__day--outfocus {
+              display: none;
+            }
+            /* line 246, D:\filter\less\date-time\base.date.less */
+            .picker__day--infocus:hover,
+            .picker__day--outfocus:hover {
+              cursor: pointer;
+              color: var(--primary-background-color,#fff);
+              background: var(--default-primary-color,#07c5f2);
+            }
+            /* line 261, D:\filter\less\date-time\base.date.less */
+            .picker__day--selected,
+            .picker__day--selected:hover,
+            .picker--focused .picker__day--selected {
+              background: var(--calendar-day-hover-bg);
+              color: var(--calendar-day-hover-text);
+            }
+            /* line 268, D:\filter\less\date-time\base.date.less */
+            .picker__day--disabled,
+            .picker--focused .picker__day--disabled {
+              color: var(--calendar-disabled-text-color);
+              cursor: default;
+            }
+            /* line 273, D:\filter\less\date-time\base.date.less */
+            .picker__day--disabled:hover {
+              background: transparent!important;
+            }
+
+            /* ==========================================================================
+               START CUSTOM SOUNAK-DATE-PICKER
+               ========================================================================== */
+            @media ( min-width: 40em){
+              .picker__holder {
+                position: relative;
+                overflow: inherit;
+                outline: none;
+              }
+
+              .picker__frame {
+                transform: translateY(0) translateX(-50%)!important;
+                left: 50%;
+                display: none;
+    
+              }
+  
+              .picker__box {
+                margin-top: 9px;
+                box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+                border:1px solid var(--calendar-box-border-color);
+              }
+              .picker__box:before {
+                content: '';
+                position: absolute;
+               /*  z-index: -1; */
+                background: var(--calendar-box-background-color);
+                top: 0;
+                width: 18px;
+                height: 18px;
+                left: 50%;
+                margin-left: -9px;
+                margin-top: -10px;
+                -webkit-transform: rotate(45deg);
+                transform: rotate(45deg);
+                border-top: 1px solid var(--calendar-box-border-color);
+                border-left: 1px solid var(--calendar-box-border-color);
+              }
+            }
+
+        </style>
+        <!--<paper-input-container id="inputContainer" always-float-label no-label-float="[[noLabelFloat]]" disabled$="[[disabled]]" invalid="[[invalid]]">
+            
+            <label hidden$="[[!label]]" aria-hidden="true" for="input" slot="label">[[label]]</label>
+
+            <input  is="iron-input" slot="input" id="input"
+                bind-value="{{selectedDate}}">
+
+            <template is="dom-if" if="[[errorMessage]]">
+                <paper-input-error aria-live="assertive" slot="add-on" class="error" invalid="[[invalid]]">[[errorMessage]]</paper-input-error>
+            </template>
+         </paper-input-container>-->
+
+    <paper-input id="input" disabled$="[[disabled]]" invalid="[[invalid]]" always-float-label="[[alwaysFloatLabel]]" label="[[label]]" value="{{selectedDate}}"></paper-input>
+</template>
+</dom-module>
+<script>
+Polymer({
+    is: 'custom-calendar',
+
+    properties: {
+
+        
+        /**
+         * Check is the component is required
+         */
+         required:Boolean,
+        
+        /**
+         * This attribute will return the selected date
+         */
+        selectedDate: {
+            type: String,
+            value: '',
+            reflectToAttribute: true,
+            notify: true,
+            observer: '_floatedLabel'
+        },
+
+        /**
+         * errorMessage is to put the error msg
+         */
+        errorMessage: {
+            type: String,
+            reflectToAttribute: true,
+            value: 'Please select a date!'
+        },
+
+        /**
+         * This attribute will put the format of the date selected in the place holder.
+         *@default: dddd, dd mmm, yyyy
+         */
+        format: {
+            type: String,
+            value: 'dddd, dd mmm, yyyy',
+            reflectToAttribute: true,
+            notify: true
+        },
+
+
+        /**
+         * This attribute will put the submit format of the date selected in the place holder.
+         *@default: yyyy,mm,dd
+         */
+        submitFormat: {
+            type: String,
+            value: 'yyyy,mm,dd',
+            notify: true
+        },
+
+        /**
+         * Pass the array of dates to be disabled
+         *@default: null
+         */
+        disabledDates: {
+            type: Array,
+            value: function() {
+                return null;
+            },
+            notify: true,
+            observer: '_setDisableDates'
+        },
+
+      
+        /**
+         * picker object will help you pass further methods
+         */
+        picker: Object,
+
+        _input: Object,
+
+        /**
+         * This is an object to put further methods on it.
+         */
+        _instance: Object,
+
+        /**
+         * This is an object to put further methods on it.
+         */
+        isDob: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true,
+            observer: '_manageRange'
+        },
+
+        min: {
+            type: Object,
+            value: function() {
+                return null;
+            },
+            notify: true
+
+        },
+
+        max: {
+            type: Object,
+            value: function() {
+                return null;
+            },
+            notify: true
+        },
+
+        _date: {
+            type: Object,
+            notify: true,
+            observer: '_dateFromObject'
+        },
+
+        /**
+         * Set to true to disable the floating label. The label disappears when the input value is
+         * not null.
+         */
+        noLabelFloat: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * True if the input is invalid. This property is set automatically when the input value
+         * changes if auto-validating, or when the `iron-input-valid` event is heard from a child.
+         */
+        invalid: {
+            type: Boolean,
+            reflectToAttribute:true,
+            value: false
+        },
+
+        /**
+         * The label for this input. If you're using PaperInputBehavior to
+         * implement your own paper-input-like element, bind this to
+         * `<label>`'s slotted(and `hidden` property, e.g.
+         * `<label hidden$="[[!label]]">[[label]]</label>` in your `template`
+         */
+        label: {
+            type: String,
+            value: 'Select Date'
+        },
+    },
+
+    attached: function() {
+        this._initiate();
+        this._changeMinMax();
+        //this.$.inputContainer.fireBlur = false;
+    },
+
+    closeDatePicker: function () {
+        this.picker.close(true);
+    },
+
+    _getMinMax: function() {
+        var range = {};
+        range.min = (this.min === null) ? true : this.min;
+        range.max = (this.max === null) ? false : this.max;
+
+        return range;
+    },
+
+    _dateFromObject: function() {
+        if (this.picker !== undefined) {
+            this.picker.set('select', this._date);
+            this.selectedDate = this.picker.get('select', this.format);
+        }
+    },
+
+    _changeMinMax: function() {
+        if (!this.min) {
+            this.min = new Date();
+            this.min.setFullYear(this.min.getFullYear() - 120);
+            if (this.max !== null) this.picker.set('max', this.max);
+        } else {
+            this.picker.set('min', this.min);
+            if (this.max !== null) this.picker.set('max', this.max);
+        }
+    },
+
+
+    //to initiate the date picker...  
+
+    _initiate: function () {
+        this._input = $(this.$.input);
+        var component = this;
+        // component.disabledDates=[[2015,8,12]];
+
+        var pickerSettings = {
+            component: this,
+            labelMonthNext: 'Go to the next month',
+            labelMonthPrev: 'Go to the previous month',
+            labelMonthSelect: 'Pick a month from the dropdown',
+            labelYearSelect: 'Pick a year from the dropdown',
+            weekdaysShort: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+            today: "",
+            clear: "",
+            close: "",
+            //selectMonths: true,
+            //selectYears: true,
+            format: component.format,
+            closeOnSelect: true,
+            selectMonths: true,
+            onOpen: function() {
+                component.opened = true;
+                component.dispatchEvent(new CustomEvent('date-picker-open', {}));
+            },
+            onClose: function() {
+                component.opened = false;
+                component.selectedDate = component.$.input.value;
+                $(document.activeElement).blur();
+                component.validate();
+                /*;
+                if (component._input.val() !== "") {
+                    component._input.addClass('yes-value').siblings('i').addClass('active');
+                } else {
+                    component._input.removeClass('yes-value').siblings('i').removeClass('active');
+                }*/
+            }
+        };
+
+        var range = this._getMinMax();
+        pickerSettings.selectYears = this.isDob ? 110 : 2;
+        pickerSettings.min = range.min;
+        pickerSettings.max = range.max;
+        this._instance = this._input.pickadate(pickerSettings);
+        this.picker = this._input.pickadate('picker');
+    },
+
+    _setDisableDates: function() {
+        if (this.picker !== undefined) this.picker.set('disable', this.disabledDates);
+    },
+
+    _manageRange: function() {
+        var currentDate = new Date();
+        if (this.isDob) {
+
+            this.max = new Date();
+            this._initiate();
+        }
+    },
+
+    /*
+     * Private method to clear the value
+     */
+    _clear: function() {
+        this.picker.clear();
+        this.selectedDate = "";
+        this.$.input.value = "";
+    },
+
+
+    /*
+     * Private method to clear the value
+     */
+    _floatedLabel: function(newValue, oldValue) {
+        /*if (this.selectedDate.length > 0) {
+            this.classList.add('label-is-floating');
+        } else {
+            this.classList.remove('label-is-floating');
+        }
+*/
+        //component load condition
+        //patch ATOM-501 added picker as a condition
+        if (!this.picker) {
+            return;
+        }
+        if (!newValue && !oldValue) {
+            return;
+        }
+        //break loop condition 
+        if (newValue && oldValue && newValue == oldValue)
+            return;
+
+        this.picker.set('select', newValue, {
+            format: this.format
+        });
+
+    },
+    /**
+     * Function to validate if the date is selected
+     */
+    validate: function() {
+        if (this.required) {
+            if (this.selectedDate && this.selectedDate.length > 0) {
+                $(this).find('paper-input-container').removeClass('invalid-input');
+                this.invalid = false;
+                return true;
+            }
+                $(this).find('paper-input-container').addClass('invalid-input');
+                this.invalid = true;
+            return false;
+        }
+    }
+
+});
+</script>
